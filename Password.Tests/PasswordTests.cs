@@ -58,10 +58,11 @@ namespace Password.Tests
             
             [Theory]
             [InlineData("P@ssw^rd1", "Invalid character")]
-            public void Password_Should_Failed_To_Parse(string password, string reason)
+            [InlineData("","Too short", "No capital letter", "No lower letter", "No number", "No special character","Invalid character")]
+            public void Password_Should_Failed_To_Parse(string password, params string[] reasons)
                 => Password.ParseWithMultipleErrors(password)
                            .Should()
-                           .BeLeft(errors => errors.Should().ContainSingle(e => e.Reason == reason));
+                           .BeLeft(errors => errors.Should().BeEquivalentTo(reasons.Select(c=>new ParsingError(c))));
         }
     }
 }
