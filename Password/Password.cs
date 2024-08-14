@@ -34,10 +34,14 @@ namespace Password
 
         public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
         {
-            return Rules.Map(f => f(input))
-                        .Filter(r => r.IsSome)
-                        .Bind(r => r)
-                        .ToSeq();
+            var parsingErrors =  Rules.Map(f => f(input))
+                                      .Filter(r => r.IsSome)
+                                      .Bind(r => r)
+                                      .ToSeq();
+
+            return parsingErrors.IsEmpty
+                ? new Password(input)
+                : parsingErrors;
         }
 
         #region Equality operators
