@@ -1,7 +1,5 @@
-using System.Text.RegularExpressions;
 using LanguageExt;
-using static LanguageExt.Option<Password.ParsingError>;
-using static LanguageExt.Seq;
+using static System.Text.RegularExpressions.Regex;
 
 namespace Password
 {
@@ -11,28 +9,25 @@ namespace Password
 
         private Password(string value) => _value = value;
 
-        private static readonly Seq<Func<string, Option<ParsingError>>> Rules =
-            create<Func<string, Option<ParsingError>>>(
-                input => Match(input, ".{8,}", "Too short"),
-                input => Match(input, ".*[A-Z].*", "No capital letter"),
-                input => Match(input, ".*[a-z].*", "No lower letter"),
-                input => Match(input, ".*[0-9].*", "No number"),
-                input => Match(input, ".*[.*#@$%&].*", "No special character"),
-                input => Match(input, "^[a-zA-Z0-9.*#@$%&]+$", "Invalid character")
-            );
+        private static readonly Dictionary<string, string> Rules =
+            new()
+            {
+                {".{8,}", "Too short"},
+                {".*[A-Z].*", "No capital letter"},
+                {".*[a-z].*", "No lower letter"},
+                {".*[0-9].*", "No number"},
+                {".*[.*#@$%&].*", "No special character"},
+                {"^[a-zA-Z0-9.*#@$%&]+$", "Invalid character"}
+            };
 
-        public static Either<ParsingError, Password> Parse(string input) =>
-            ParseWithMultipleErrors(input).MapLeft(errors => errors.Head());
-
-        private static Option<ParsingError> Match(string input, string regex, string reason)
-            => !Regex.Match(input, regex).Success
-                ? new ParsingError(reason)
-                : None;
+        public static Either<ParsingError, Password> Parse(string input)
+            => ParseWithMultipleErrors(input)
+                .MapLeft(errors => errors.Head());
 
         public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
-            => Rules.Bind(f => f(input))
-                .ToSeq()
-                .Let(parsingErrors => ToEither(input, parsingErrors));
+            => Rules.Filter(rule => !IsMatch(input, rule.Key))
+                .Map(rule => new ParsingError(rule.Value))
+                .Let(parsingErrors => ToEither(input, parsingErrors.ToSeq()));
 
         private static Either<Seq<ParsingError>, Password> ToEither(string input, Seq<ParsingError> parsingErrors)
             => parsingErrors.IsEmpty ? new Password(input) : parsingErrors;
