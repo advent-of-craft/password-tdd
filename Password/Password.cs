@@ -8,6 +8,7 @@ namespace Password
     public sealed class Password : IEquatable<Password>
     {
         private readonly string _value;
+
         private Password(string value) => _value = value;
 
         private static readonly Seq<Func<string, Option<ParsingError>>> Rules =
@@ -22,18 +23,27 @@ namespace Password
 
         public static Either<ParsingError, Password> Parse(string input)
             => Rules.Map(f => f(input))
-                .FirstOrDefault(r => r.IsSome)
-                .ToEither(new Password(input))
-                .Swap();
+                    .FirstOrDefault(r => r.IsSome)
+                    .ToEither(new Password(input))
+                    .Swap();
 
         private static Option<ParsingError> Match(string input, string regex, string reason)
             => !Regex.Match(input, regex).Success
                 ? new ParsingError(reason)
                 : None;
 
+        public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
+        {
+            return Rules.Map(f => f(input))
+                        .Filter(r => r.IsSome)
+                        .Bind(r => r)
+                        .ToSeq();
+        }
+
         #region Equality operators
         
         public override string ToString() => _value;
+
         public override int GetHashCode() => _value.GetHashCode();
         public static bool operator ==(Password password, Password other) => password.Equals(other);
         public static bool operator !=(Password password, Password other) => !(password == other);
@@ -53,6 +63,8 @@ namespace Password
         public override bool Equals(object? obj) => obj is Password && Equals(_value);
         
         #endregion
+
+
     }
 
     public sealed record ParsingError(string Reason);
