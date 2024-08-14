@@ -12,16 +12,16 @@ namespace Password.Tests
         [InlineData("Advent0fCraft&")]
         public void Success_For_A_Valid_Password(string password)
             => Password.Parse(password)
-                       .Should()
-                       .BeRight(p => p.ToString().Should().Be(password));
-        
+                .Should()
+                .BeRight(p => p.ToString().Should().Be(password));
+
         [Theory]
         [InlineData("P@ssw0rd")]
         [InlineData("Advent0fCraft&")]
         public void Success_For_A_Valid_Password_Parsed_With_Multiple_Errors(string password)
             => Password.ParseWithMultipleErrors(password)
-                       .Should()
-                       .BeRight(p => p.ToString().Should().Be(password));
+                .Should()
+                .BeRight(p => p.ToString().Should().Be(password));
 
         [Fact]
         public void Value_Equality()
@@ -53,16 +53,28 @@ namespace Password.Tests
             [InlineData("P@ssw^rd1", "Invalid character")]
             public void Password_Is_Not_Valid(string password, string reason)
                 => Password.Parse(password)
-                           .Should()
-                           .BeLeft(error => error.Reason.Should().Be(reason));
-            
+                    .Should()
+                    .BeLeft(error => error.Reason.Should().Be(reason));
+
             [Theory]
             [InlineData("P@ssw^rd1", "Invalid character")]
-            [InlineData("","Too short", "No capital letter", "No lower letter", "No number", "No special character","Invalid character")]
+            [InlineData("aa", "Too short", "No capital letter", "No number", "No special character")]
+            [InlineData("xxxxxxx", "Too short", "No capital letter", "No number", "No special character")]
+            [InlineData("adventofcraft", "No capital letter", "No number", "No special character")]
+            [InlineData("p@ssw0rd", "No capital letter")]
+            [InlineData("ADVENTOFCRAFT", "No lower letter", "No number", "No special character")]
+            [InlineData("P@SSW0RD", "No lower letter")]
+            [InlineData("Adventofcraft", "No number", "No special character")]
+            [InlineData("P@sswOrd", "No number")]
+            [InlineData("Adventof09craft", "No special character")]
+            [InlineData("PAssw0rd", "No special character")]
+            [InlineData("Advent@of9Craft/", "Invalid character")]
+            [InlineData("", "Too short", "No capital letter", "No lower letter", "No number", "No special character",
+                "Invalid character")]
             public void Password_Should_Failed_To_Parse(string password, params string[] reasons)
                 => Password.ParseWithMultipleErrors(password)
-                           .Should()
-                           .BeLeft(errors => errors.Should().BeEquivalentTo(reasons.Select(c=>new ParsingError(c))));
+                    .Should()
+                    .BeLeft(errors => errors.Should().BeEquivalentTo(reasons.Select(c => new ParsingError(c))));
         }
     }
 }
