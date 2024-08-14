@@ -14,6 +14,14 @@ namespace Password.Tests
             => Password.Parse(password)
                        .Should()
                        .BeRight(p => p.ToString().Should().Be(password));
+        
+        [Theory]
+        [InlineData("P@ssw0rd")]
+        [InlineData("Advent0fCraft&")]
+        public void Success_For_A_Valid_Password_Parsed_With_Multiple_Errors(string password)
+            => Password.ParseWithMultipleErrors(password)
+                       .Should()
+                       .BeRight(p => p.ToString().Should().Be(password));
 
         [Fact]
         public void Value_Equality()
