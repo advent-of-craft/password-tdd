@@ -21,11 +21,8 @@ namespace Password
                 input => Match(input, "^[a-zA-Z0-9.*#@$%&]+$", "Invalid character")
             );
 
-        public static Either<ParsingError, Password> Parse(string input)
-            => Rules.Map(f => f(input))
-                    .FirstOrDefault(r => r.IsSome)
-                    .ToEither(new Password(input))
-                    .Swap();
+        public static Either<ParsingError, Password> Parse(string input) =>
+            ParseWithMultipleErrors(input).MapLeft(errors => errors.Head());
 
         private static Option<ParsingError> Match(string input, string regex, string reason)
             => !Regex.Match(input, regex).Success
@@ -38,7 +35,7 @@ namespace Password
                                       .Bind(r => r)
                                       .ToSeq();
 
-            return parsingErrors.IsEmpty
+            return parsingErrors.IsEmpty 
                 ? new Password(input)
                 : parsingErrors;
         }
