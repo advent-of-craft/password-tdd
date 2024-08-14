@@ -11,16 +11,16 @@ namespace Password.Tests
         [InlineData("P@ssw0rd")]
         [InlineData("Advent0fCraft&")]
         public void Success_For_A_Valid_Password(string password)
-            => global::Password.Password.Parse(password)
-                .Should()
-                .BeRight(p => p.ToString().Should().Be(password));
+            => Password.Parse(password)
+                       .Should()
+                       .BeRight(p => p.ToString().Should().Be(password));
 
         [Fact]
         public void Value_Equality()
         {
             const string input = "P@ssw0rd";
-            var password = global::Password.Password.Parse(input).ValueUnsafe();
-            var other = global::Password.Password.Parse(input).ValueUnsafe();
+            var password = Password.Parse(input).ValueUnsafe();
+            var other = Password.Parse(input).ValueUnsafe();
 
             password.Equals(other).Should().BeTrue();
             (password == other).Should().BeTrue();
@@ -44,9 +44,16 @@ namespace Password.Tests
             [InlineData("Advent@of9Craft/", "Invalid character")]
             [InlineData("P@ssw^rd1", "Invalid character")]
             public void Password_Is_Not_Valid(string password, string reason)
-                => global::Password.Password.Parse(password)
-                    .Should()
-                    .BeLeft(error => error.Reason.Should().Be(reason));
+                => Password.Parse(password)
+                           .Should()
+                           .BeLeft(error => error.Reason.Should().Be(reason));
+            
+            [Theory]
+            [InlineData("P@ssw^rd1", "Invalid character")]
+            public void Password_Should_Failed_To_Parse(string password, string reason)
+                => Password.ParseWithMultipleErrors(password)
+                           .Should()
+                           .BeLeft(errors => errors.Should().ContainSingle(e => e.Reason == reason));
         }
     }
 }
