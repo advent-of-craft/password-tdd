@@ -30,18 +30,15 @@ namespace Password
                 : None;
 
         public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
-        {
-            var parsingErrors =  Rules.Map(f => f(input))
-                                      .Bind(r => r)
-                                      .ToSeq();
+            => Rules.Bind(f => f(input))
+                .ToSeq()
+                .Let(parsingErrors => ToEither(input, parsingErrors));
 
-            return parsingErrors.IsEmpty 
-                ? new Password(input)
-                : parsingErrors;
-        }
+        private static Either<Seq<ParsingError>, Password> ToEither(string input, Seq<ParsingError> parsingErrors)
+            => parsingErrors.IsEmpty ? new Password(input) : parsingErrors;
 
         #region Equality operators
-        
+
         public override string ToString() => _value;
 
         public override int GetHashCode() => _value.GetHashCode();
@@ -61,10 +58,8 @@ namespace Password
 
         public bool Equals(Password? other) => _value.Equals(other!._value);
         public override bool Equals(object? obj) => obj is Password && Equals(_value);
-        
+
         #endregion
-
-
     }
 
     public sealed record ParsingError(string Reason);
