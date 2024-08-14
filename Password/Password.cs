@@ -18,14 +18,10 @@ namespace Password
             new Rule("^[a-zA-Z0-9.*#@$%&]+$", "Invalid character")
         );
 
-        public static Either<ParsingError, Password> Parse(string input)
-            => ParseWithMultipleErrors(input)
-                .MapLeft(errors => errors.Head());
-
-        public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
+        public static Either<Seq<ParsingError>, Password> Parse(string input)
             => Rules.Filter(rule => rule.IsNotMatching(input))
                 .Map(rule => new ParsingError(rule.Reason))
-                .Let(parsingErrors => ToEither(input, parsingErrors.ToSeq()));
+                .Let(parsingErrors => ToEither(input, parsingErrors));
 
         private static Either<Seq<ParsingError>, Password> ToEither(string input, Seq<ParsingError> parsingErrors)
             => parsingErrors.IsEmpty ? new Password(input) : parsingErrors;
