@@ -9,24 +9,22 @@ namespace Password
 
         private Password(string value) => _value = value;
 
-        private static readonly Dictionary<string, string> Rules =
-            new()
-            {
-                {".{8,}", "Too short"},
-                {".*[A-Z].*", "No capital letter"},
-                {".*[a-z].*", "No lower letter"},
-                {".*[0-9].*", "No number"},
-                {".*[.*#@$%&].*", "No special character"},
-                {"^[a-zA-Z0-9.*#@$%&]+$", "Invalid character"}
-            };
+        private static readonly Seq<Rule> Rules = Seq.create(
+            new Rule("^.{8,}$", "Too short"),
+            new Rule(".*[A-Z].*", "No capital letter"),
+            new Rule(".*[a-z].*", "No lower letter"),
+            new Rule(".*[0-9].*", "No number"),
+            new Rule(".*[.*#@$%&].*", "No special character"),
+            new Rule("^[a-zA-Z0-9.*#@$%&]+$", "Invalid character")
+        );
 
         public static Either<ParsingError, Password> Parse(string input)
             => ParseWithMultipleErrors(input)
                 .MapLeft(errors => errors.Head());
 
         public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
-            => Rules.Filter(rule => !IsMatch(input, rule.Key))
-                .Map(rule => new ParsingError(rule.Value))
+            => Rules.Filter(rule => rule.IsNotMatching(input))
+                .Map(rule => new ParsingError(rule.Reason))
                 .Let(parsingErrors => ToEither(input, parsingErrors.ToSeq()));
 
         private static Either<Seq<ParsingError>, Password> ToEither(string input, Seq<ParsingError> parsingErrors)
@@ -43,14 +41,6 @@ namespace Password
         private int CompareTo(Password? other)
             => string.Compare(_value, other?._value, StringComparison.Ordinal);
 
-        public int CompareTo(object? other)
-            => other switch
-            {
-                null => 1,
-                Password password => CompareTo(password),
-                _ => throw new ArgumentException("must be of type Snafu")
-            };
-
         public bool Equals(Password? other) => _value.Equals(other!._value);
         public override bool Equals(object? obj) => obj is Password && Equals(_value);
 
@@ -58,4 +48,9 @@ namespace Password
     }
 
     public sealed record ParsingError(string Reason);
+
+    public sealed record Rule(string Pattern, string Reason)
+    {
+        public bool IsNotMatching(string input) => !IsMatch(input, Pattern);
+    }
 }
