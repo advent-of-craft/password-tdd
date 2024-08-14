@@ -35,7 +35,6 @@ namespace Password
         public static Either<Seq<ParsingError>, Password> ParseWithMultipleErrors(string input)
         {
             var parsingErrors =  Rules.Map(f => f(input))
-                                      .Filter(r => r.IsSome)
                                       .Bind(r => r)
                                       .ToSeq();
 
