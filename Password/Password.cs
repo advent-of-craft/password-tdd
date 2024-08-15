@@ -1,5 +1,6 @@
 using LanguageExt;
 using static System.Text.RegularExpressions.Regex;
+using static Password.Password.Errors;
 
 namespace Password
 {
@@ -10,12 +11,12 @@ namespace Password
         private Password(string value) => _value = value;
 
         private static readonly Seq<Rule> Rules = Seq.create(
-            new Rule("^.{8,}$", "Too short"),
-            new Rule(".*[A-Z].*", "No capital letter"),
-            new Rule(".*[a-z].*", "No lower letter"),
-            new Rule(".*[0-9].*", "No number"),
-            new Rule(".*[.*#@$%&].*", "No special character"),
-            new Rule("^[a-zA-Z0-9.*#@$%&]+$", "Invalid character")
+            new Rule("^.{8,}$", TooShort),
+            new Rule(".*[A-Z].*", NoCapitalLetter),
+            new Rule(".*[a-z].*", NoLowerLetter),
+            new Rule(".*[0-9].*", NoNumber),
+            new Rule(".*[.*#@$%&].*", NoSpecialCharacter),
+            new Rule("^[a-zA-Z0-9.*#@$%&]+$", InvalidCharacter)
         );
 
         public static Either<Seq<ParsingError>, Password> Parse(string input)
@@ -41,6 +42,16 @@ namespace Password
         public override bool Equals(object? obj) => obj is Password && Equals(_value);
 
         #endregion
+
+        public static class Errors
+        {
+            public const string TooShort = "Too short";
+            public const string NoCapitalLetter = "No capital letter";
+            public const string NoLowerLetter = "No lower letter";
+            public const string NoNumber = "No number";
+            public const string NoSpecialCharacter = "No special character";
+            public const string InvalidCharacter = "Invalid character";
+        }
     }
 
     public sealed record ParsingError(string Reason);
